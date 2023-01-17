@@ -4,7 +4,7 @@ import java.util.List;
 
 public class JwtResponse {
   private String accessToken;
-  private String tokenType = "reficulx";
+  private String tokenType = "Bearer";
   private String id;
   private String username;
   private String email;
