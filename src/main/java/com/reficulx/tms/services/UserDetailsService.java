@@ -1,4 +1,4 @@
-package com.reficulx.tms.security.services;
+package com.reficulx.tms.services;
 
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;

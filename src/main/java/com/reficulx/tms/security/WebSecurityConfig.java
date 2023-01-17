@@ -2,7 +2,7 @@ package com.reficulx.tms.security;
 
 import com.reficulx.tms.security.jwt.AuthEntryPointJwt;
 import com.reficulx.tms.security.jwt.AuthTokenFilter;
-import com.reficulx.tms.security.services.UserDetailsServiceImpl;
+import com.reficulx.tms.services.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -1,6 +1,6 @@
 package com.reficulx.tms.security.jwt;
 
-import com.reficulx.tms.security.services.UserDetailsImpl;
+import com.reficulx.tms.services.UserDetailsImpl;
 import io.jsonwebtoken.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

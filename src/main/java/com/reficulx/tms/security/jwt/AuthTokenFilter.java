@@ -1,6 +1,6 @@
 package com.reficulx.tms.security.jwt;
 
-import com.reficulx.tms.security.services.UserDetailsServiceImpl;
+import com.reficulx.tms.services.UserDetailsServiceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

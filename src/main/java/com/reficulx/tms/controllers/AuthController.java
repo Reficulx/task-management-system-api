@@ -10,7 +10,7 @@ import com.reficulx.tms.payload.response.MessageResponse;
 import com.reficulx.tms.repository.RoleRepository;
 import com.reficulx.tms.repository.UserRepository;
 import com.reficulx.tms.security.jwt.JwtUtils;
-import com.reficulx.tms.security.services.UserDetailsImpl;
+import com.reficulx.tms.services.UserDetailsImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;

@@ -1,4 +1,4 @@
-package com.reficulx.tms.security.services;
+package com.reficulx.tms.services;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.reficulx.tms.models.User;

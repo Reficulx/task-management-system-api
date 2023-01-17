@@ -2,7 +2,7 @@ package com.reficulx.tms.controllers;
 
 import com.reficulx.tms.models.Task;
 import com.reficulx.tms.payload.request.TaskRequest;
-import com.reficulx.tms.security.services.TaskService;
+import com.reficulx.tms.services.TaskService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
