@@ -11,7 +11,6 @@ import com.reficulx.tms.repository.RoleRepository;
 import com.reficulx.tms.repository.UserRepository;
 import com.reficulx.tms.security.jwt.JwtUtils;
 import com.reficulx.tms.services.UserDetailsImpl;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -31,17 +30,20 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-  @Autowired
   AuthenticationManager authenticationManager;
-
-  @Autowired
   UserRepository userRepository;
-  @Autowired
   RoleRepository roleRepository;
-  @Autowired
   PasswordEncoder passwordEncoder;
-  @Autowired
   JwtUtils jwtUtils;
+
+  public AuthController(AuthenticationManager authenticationManager, UserRepository userRepository,
+                        RoleRepository roleRepository, PasswordEncoder passwordEncoder, JwtUtils jwtUtils) {
+    this.authenticationManager = authenticationManager;
+    this.userRepository = userRepository;
+    this.roleRepository = roleRepository;
+    this.passwordEncoder = passwordEncoder;
+    this.jwtUtils = jwtUtils;
+  }
 
 
   @PostMapping("/signin")

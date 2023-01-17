@@ -2,7 +2,6 @@ package com.reficulx.tms.services;
 
 import com.reficulx.tms.models.User;
 import com.reficulx.tms.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -14,8 +13,12 @@ import javax.transaction.Transactional;
 
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
-  @Autowired
+
   UserRepository userRepository;
+
+  public UserDetailsServiceImpl(UserRepository userRepository) {
+    this.userRepository = userRepository;
+  }
 
   @Override
   @Transactional
