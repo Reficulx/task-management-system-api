@@ -9,10 +9,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
@@ -41,12 +44,35 @@ public class TaskController {
 
   @PostMapping("/create")
   @PreAuthorize(value = "hasRole('USER') or hasRole('MODERATOR') or hasRole('ADMIN')")
-  public ResponseEntity<String> createTask(@Valid @RequestBody TaskRequest taskRequest) {
+  public ResponseEntity<Task> createTask(@Valid @RequestBody TaskRequest taskRequest) {
     try {
       Task task = taskService.createTask(taskRequest);
-      return new ResponseEntity<>(task.toString(), HttpStatus.CREATED);
+      return new ResponseEntity<>(task, HttpStatus.CREATED);
     } catch (Exception e) {
-      return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+      logger.error(e.getMessage());
+      return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  @PostMapping("/update/id={id}")
+  @PreAuthorize("hasRole('USER') and not hasRole('MODERATOR') and not hasRole('ADMIN')")
+  public ResponseEntity<Task> updateTask(@PathVariable("id") String id, @RequestBody Task updatedTask) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (hasUserAccessOnly(authentication) && !authentication.getName().equals(updatedTask.getUsername())) {
+      logger.error("Error: user does not have access to modify other users' tasks!");
+      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+    }
+    try {
+      Task task = taskService.updateTask(id, updatedTask);
+      if (!Objects.isNull(task)) {
+        return new ResponseEntity<>(task, HttpStatus.OK);
+      } else {
+        logger.error("Error: The task to be updated is not found!");
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+      }
+    } catch (Exception e) {
+      logger.error(e.getMessage());
+      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -59,10 +85,14 @@ public class TaskController {
     boolean hasUsername = !Objects.isNull(username) && (username.length() > 0);
     boolean hasTitle = !Objects.isNull(title) && (title.length() > 0);
     if (!(hasUsername && hasTitle)) {
-      return new ResponseEntity<>("Error: username and title are required to delete a task!", HttpStatus.BAD_REQUEST);
+      String message = "Error: username and title are required to delete a task!";
+      logger.error(message);
+      return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
     }
     if (!authentication.getName().equals(username)) {
-      return new ResponseEntity<>("Error: users could not delete others' tasks or wrong username!", HttpStatus.BAD_REQUEST);
+      String message = "Error: users could not delete others' tasks or wrong username!";
+      logger.error(message);
+      return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
     }
     return deleteByUsernameAndTitle(username, title);
   }
@@ -70,7 +100,6 @@ public class TaskController {
   @DeleteMapping("/delete/username={username}&title={title}")
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<String> adminDeleteTasks(@PathVariable("username") String username, @PathVariable("title") String title) {
-    System.out.println("Here!");
     return deleteByUsernameAndTitle(username, title);
   }
 
@@ -79,9 +108,13 @@ public class TaskController {
       taskService.deleteTasks(username, title);
       return new ResponseEntity<>("Task is successfully deleted!", HttpStatus.OK);
     } catch (Exception e) {
+      logger.error(e.getMessage());
       return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
     }
   }
 
-
+  private boolean hasUserAccessOnly(Authentication authentication) {
+    Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+    return (authorities.contains(new SimpleGrantedAuthority("ROLE_ADMIN")) || authorities.contains(new SimpleGrantedAuthority("ROLE_MODERATOR")));
+  }
 }

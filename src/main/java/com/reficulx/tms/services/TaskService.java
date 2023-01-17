@@ -14,6 +14,4 @@ public interface TaskService {
   void deleteTasks(String username, String title) throws Exception;
 
   Task updateTask(String username, Task task) throws Exception;
-
-
 }

@@ -80,7 +80,19 @@ public class TaskServiceImpl implements TaskService {
   }
 
   @Override
-  public Task updateTask(String id, Task task) {
+  public Task updateTask(String id, Task updatedTask) {
+    Optional<Task> taskData = taskRepository.findById(id);
+    if (taskData.isPresent()) {
+      // creationTime is not changed
+      Task task = taskData.get();
+      task.setTitle(updatedTask.getTitle());
+      task.setDescription(updatedTask.getDescription());
+      task.setStartTime(updatedTask.getStartTime());
+      task.setDeadline(updatedTask.getDeadline());
+      // completionTime is dependent on the task status
+      updateTaskStatus(task, updatedTask);
+      return taskRepository.save(task);
+    }
     return null;
   }
 
@@ -102,6 +114,22 @@ public class TaskServiceImpl implements TaskService {
       default:
         return ETaskStatus.UNPUBLISHED;
     }
+  }
+
+  private void updateTaskStatus(Task task, Task updatedTask) {
+    if (Objects.isNull(updatedTask.getStatus())) {
+      updatedTask.setStatus(ETaskStatus.UNPUBLISHED);
+    }
+    if (updatedTask.getStatus().equals(ETaskStatus.COMPLETED) || updatedTask.getStatus().equals(ETaskStatus.ARCHIVED)) {
+      if (Objects.isNull(updatedTask.getCompletionTime())) {
+        task.setCompletionTime(new Date());
+      } else {
+        task.setCompletionTime(updatedTask.getCompletionTime());
+      }
+    } else {
+      task.setCompletionTime(null);
+    }
+    task.setStatus(updatedTask.getStatus());
   }
 
 }
