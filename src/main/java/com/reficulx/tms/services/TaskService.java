@@ -11,7 +11,7 @@ public interface TaskService {
 
   List<Task> getAllTasks() throws Exception;
 
-  boolean deleteTask() throws Exception;
+  void deleteTasks(String username, String title) throws Exception;
 
   List<Task> getTasksByTitleContaining(String title) throws Exception;
 

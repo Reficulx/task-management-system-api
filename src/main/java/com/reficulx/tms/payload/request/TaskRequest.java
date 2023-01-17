@@ -3,11 +3,8 @@ package com.reficulx.tms.payload.request;
 import javax.validation.constraints.NotBlank;
 
 public class TaskRequest {
-  @NotBlank
   private String username;
-  @NotBlank
   private String title;
-  @NotBlank
   private String description;
   private String creationTime;
   private String startTime;

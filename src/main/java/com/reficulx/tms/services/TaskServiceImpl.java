@@ -4,6 +4,7 @@ import com.reficulx.tms.models.ETaskStatus;
 import com.reficulx.tms.models.Task;
 import com.reficulx.tms.payload.request.TaskRequest;
 import com.reficulx.tms.repository.TaskRepository;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
@@ -12,8 +13,8 @@ import java.util.*;
 @Service
 public class TaskServiceImpl implements TaskService {
 
-  private TaskRepository taskRepository;
-  private SimpleDateFormat dateFormatter;
+  private final TaskRepository taskRepository;
+  private final SimpleDateFormat dateFormatter;
 
   public TaskServiceImpl(TaskRepository taskRepository) {
     this.taskRepository = taskRepository;
@@ -23,6 +24,9 @@ public class TaskServiceImpl implements TaskService {
 
   @Override
   public Task createTask(TaskRequest taskRequest) throws Exception {
+    if (Objects.isNull(taskRequest.getUsername()) || Objects.isNull(taskRequest.getTitle()) || Objects.isNull(taskRequest.getDescription())) {
+      throw new IllegalArgumentException("Error: missing information for username, title, or description!");
+    }
     if (taskRepository.existsByUsernameAndTitle(taskRequest.getUsername(), taskRequest.getTitle())) {
       throw new IllegalArgumentException("Error: Task already exists!");
     }
@@ -42,13 +46,25 @@ public class TaskServiceImpl implements TaskService {
   }
 
   @Override
-  public List<Task> getAllTasks() {
-    return null;
+  public List<Task> getAllTasks() throws Exception {
+    // TODO: check overdue status for all get task operations
+    return new ArrayList<>(taskRepository.findAll());
   }
 
   @Override
-  public boolean deleteTask() {
-    return false;
+  public void deleteTasks(String username, String title) throws Exception {
+    boolean hasUsername = !Objects.isNull(username) && (username.length() > 0);
+    boolean hasTitle = !Objects.isNull(title) && (title.length() > 0);
+    if (!(hasUsername || hasTitle)) {
+      throw new IllegalArgumentException("Error: username and title cannot both be null at the same time!");
+    }
+    if (hasUsername && hasTitle) {
+      taskRepository.deleteTasksByUsernameAndTitle(username, title);
+    }
+    if (hasUsername) {
+      taskRepository.deleteTasksByUsername(username);
+    }
+    taskRepository.deleteTasksByTitle(title);
   }
 
   @Override
