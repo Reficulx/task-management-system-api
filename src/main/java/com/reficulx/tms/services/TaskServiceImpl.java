@@ -4,7 +4,7 @@ import com.reficulx.tms.models.ETaskStatus;
 import com.reficulx.tms.models.Task;
 import com.reficulx.tms.payload.request.TaskRequest;
 import com.reficulx.tms.repository.TaskRepository;
-import org.springframework.security.core.parameters.P;
+import com.reficulx.tms.utils.Utils;
 import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
@@ -46,15 +46,9 @@ public class TaskServiceImpl implements TaskService {
   }
 
   @Override
-  public List<Task> getAllTasks() throws Exception {
-    // TODO: check overdue status for all get task operations
-    return new ArrayList<>(taskRepository.findAll());
-  }
-
-  @Override
   public void deleteTasks(String username, String title) throws Exception {
-    boolean hasUsername = !Objects.isNull(username) && (username.length() > 0);
-    boolean hasTitle = !Objects.isNull(title) && (title.length() > 0);
+    boolean hasUsername = Utils.isValidString(username);
+    boolean hasTitle = Utils.isValidString(title);
     if (!(hasUsername || hasTitle)) {
       throw new IllegalArgumentException("Error: username and title cannot both be null at the same time!");
     }
@@ -68,18 +62,21 @@ public class TaskServiceImpl implements TaskService {
   }
 
   @Override
-  public List<Task> getTasksByTitleContaining(String title) {
-    return null;
-  }
+  public List<Task> getTasks(String username, String title) throws Exception {
+    boolean hasUsername = Utils.isValidString(username);
+    boolean hasTitle = Utils.isValidString(title);
 
-  @Override
-  public List<Task> getTasksByUsername(String username) {
-    return null;
-  }
-
-  @Override
-  public Task getTaskById(String id) {
-    return null;
+    // TODO: check overdue status for all get task operations
+    if (!(hasUsername || hasTitle)) {
+      return new ArrayList<>(taskRepository.findAll());
+    }
+    if (hasUsername && hasTitle) {
+      return new ArrayList<>(taskRepository.findTasksByUsernameAndTitle(username, title));
+    }
+    if (hasUsername) {
+      return new ArrayList<>(taskRepository.findTasksByUsername(username));
+    }
+    return new ArrayList<>(taskRepository.findTasksByTitleContaining(title));
   }
 
   @Override

@@ -3,27 +3,40 @@ package com.reficulx.tms.controllers;
 import com.reficulx.tms.models.Task;
 import com.reficulx.tms.payload.request.TaskRequest;
 import com.reficulx.tms.services.TaskService;
-import com.reficulx.tms.services.UserDetailsImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.List;
 import java.util.Objects;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/tasks")
 public class TaskController {
-
+  private static final Logger logger = LoggerFactory.getLogger(TaskController.class);
   TaskService taskService;
 
   public TaskController(TaskService taskService) {
     this.taskService = taskService;
+  }
+
+  @GetMapping("/role=user&username={username}&title={title}")
+  @PreAuthorize(value = "hasRole('USER') or hasRole('MODERATOR') or hasRole('ADMIN')")
+  public ResponseEntity<List<Task>> getTasks(@PathVariable("username") String username, @PathVariable("title") String title) {
+    try {
+      List<Task> tasks = taskService.getTasks(username, title);
+      return new ResponseEntity<>(tasks, HttpStatus.OK);
+    } catch (Exception e) {
+      logger.error(e.getMessage());
+      return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+    }
   }
 
   @PostMapping("/create")
