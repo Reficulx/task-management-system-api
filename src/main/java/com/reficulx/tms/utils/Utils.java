@@ -11,6 +11,6 @@ public class Utils {
    * @return
    */
   public static boolean isValidString(String s) {
-    return !Objects.isNull(s) && (s.length() > 0);
+    return !Objects.isNull(s) && (s.trim().length() > 0);
   }
 }

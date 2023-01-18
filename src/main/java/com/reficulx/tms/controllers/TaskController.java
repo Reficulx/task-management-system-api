@@ -3,6 +3,7 @@ package com.reficulx.tms.controllers;
 import com.reficulx.tms.models.Task;
 import com.reficulx.tms.payload.request.TaskRequest;
 import com.reficulx.tms.services.TaskService;
+import com.reficulx.tms.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -30,7 +31,7 @@ public class TaskController {
     this.taskService = taskService;
   }
 
-  @GetMapping("/role=user&username={username}&title={title}")
+  @GetMapping("/username={username}&title={title}")
   @PreAuthorize(value = "hasRole('USER') or hasRole('MODERATOR') or hasRole('ADMIN')")
   public ResponseEntity<List<Task>> getTasks(@PathVariable("username") String username, @PathVariable("title") String title) {
     try {
@@ -45,6 +46,10 @@ public class TaskController {
   @PostMapping("/create")
   @PreAuthorize(value = "hasRole('USER') or hasRole('MODERATOR') or hasRole('ADMIN')")
   public ResponseEntity<Task> createTask(@Valid @RequestBody TaskRequest taskRequest) {
+    if (!isOperationAllowed(taskRequest.getUsername())) {
+      // NOT_ACCEPTABLE response for operation access/authority issues
+      return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
+    }
     try {
       Task task = taskService.createTask(taskRequest);
       return new ResponseEntity<>(task, HttpStatus.CREATED);
@@ -77,15 +82,9 @@ public class TaskController {
   @DeleteMapping("/delete/username={username}&title={title}")
   @PreAuthorize("hasRole('USER') or hasRole('MODERATOR') or hasRole('ADMIN')")
   public ResponseEntity<String> deleteTasksByUsernameAndTitle(@PathVariable("username") String username, @PathVariable("title") String title) {
-
-    boolean hasUsername = isValidStringInput(username);
-    boolean hasTitle = isValidStringInput(title);
-    if (!(hasUsername && hasTitle)) {
-      String message = "Error: username and title are required to delete a task!";
-      logger.error(message);
-      return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
+    if (!areUsernameAndTitleValid(username, title)) {
+      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
-
     if (isOperationAllowed(username)) {
       return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
     }
@@ -136,13 +135,19 @@ public class TaskController {
     return true;
   }
 
+  private boolean areUsernameAndTitleValid(String username, String title) {
+    boolean hasUsername = Utils.isValidString(username);
+    boolean hasTitle = Utils.isValidString(title);
+    if (!(hasUsername && hasTitle)) {
+      logger.error("Error: both username and title are required for the requested operation!");
+      return false;
+    }
+    return true;
+  }
+
   private boolean hasUserAccessOnly(Authentication authentication) {
     Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
     return (authorities.contains(new SimpleGrantedAuthority("ROLE_ADMIN")) || authorities.contains(new SimpleGrantedAuthority("ROLE_MODERATOR")));
-  }
-
-  private boolean isValidStringInput(String s) {
-    return !Objects.isNull(s) && (s.trim().length() > 0);
   }
 
 }
