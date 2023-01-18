@@ -85,7 +85,11 @@ public class TaskController {
     if (!areUsernameAndTitleValid(username, title)) {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
-    if (isOperationAllowed(username)) {
+    if (!isOperationAllowed(username)) {
+      return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
+    }
+    if (!Objects.equals(username, updatedTask.getUsername())) {
+      logger.error("Error: username and task username mismatch!");
       return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
     }
     try {
@@ -108,7 +112,7 @@ public class TaskController {
     if (!areUsernameAndTitleValid(username, title)) {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
-    if (isOperationAllowed(username)) {
+    if (!isOperationAllowed(username)) {
       return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
     }
     return deleteByUsernameAndTitle(username, title);
@@ -170,7 +174,9 @@ public class TaskController {
 
   private boolean hasUserAccessOnly(Authentication authentication) {
     Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
-    return (authorities.contains(new SimpleGrantedAuthority("ROLE_ADMIN")) || authorities.contains(new SimpleGrantedAuthority("ROLE_MODERATOR")));
+    // logger.info("INFO: is moderator: {}", authorities.contains(new SimpleGrantedAuthority("ROLE_MODERATOR")));
+    // logger.info("INFO: is admin: {}", authorities.contains(new SimpleGrantedAuthority("ROLE_ADMIN")));
+    return !(authorities.contains(new SimpleGrantedAuthority("ROLE_ADMIN")) || authorities.contains(new SimpleGrantedAuthority("ROLE_MODERATOR")));
   }
 
 }
