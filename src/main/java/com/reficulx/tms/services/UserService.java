@@ -8,6 +8,8 @@ import java.util.List;
 public interface UserService {
   User createUser(User user) throws Exception;
 
+  User getUserByUsername(String username) throws Exception;
+
   List<User> getUsers() throws Exception;
 
   List<User> getUsers(ERole role) throws Exception;

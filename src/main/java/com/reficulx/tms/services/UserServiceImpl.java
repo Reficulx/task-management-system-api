@@ -27,6 +27,11 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
+  public User getUserByUsername(String username) throws Exception {
+    return userRepository.findByUsername(username).orElse(null);
+  }
+
+  @Override
   public List<User> getUsers() throws Exception {
     return userRepository.findAll();
   }

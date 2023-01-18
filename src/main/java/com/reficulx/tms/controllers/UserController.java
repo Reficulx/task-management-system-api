@@ -9,10 +9,17 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Objects;
 
+
+@CrossOrigin(origins = "*", maxAge = 3600)
+@RestController
+@RequestMapping("/api/users")
 public class UserController {
 
   private static final Logger logger = LoggerFactory.getLogger(UserController.class);
@@ -21,6 +28,30 @@ public class UserController {
   public UserController(UserService userService) {
     this.userService = userService;
   }
+
+  /**
+   * for bootstrapping the loggedin status of the user
+   *
+   * @return
+   */
+  @GetMapping("/me")
+  @PreAuthorize(value = "hasRole('USER') or hasRole('MODERATOR') or hasRole('ADMIN')")
+  public ResponseEntity<User> getUser() {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    try {
+      User user = userService.getUserByUsername(authentication.getName());
+      if (Objects.isNull(user)) {
+        logger.error("Error: the username is not found!");
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+      }
+      return new ResponseEntity<>(user, HttpStatus.OK);
+    } catch (Exception e) {
+      logger.error(e.getMessage());
+      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+    }
+
+  }
+
 
   @GetMapping("/all")
   @PreAuthorize(value = "hasRole('USER') or hasRole('MODERATOR') or hasRole('ADMIN')")
