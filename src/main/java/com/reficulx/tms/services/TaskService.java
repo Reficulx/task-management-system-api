@@ -13,5 +13,9 @@ public interface TaskService {
 
   void deleteTasks(String username, String title) throws Exception;
 
-  Task updateTask(String username, Task task) throws Exception;
+  Task deleteTask(String id, String username, boolean hasUserAccessOnly) throws Exception;
+
+  Task updateTask(String username, String title, Task updatedTask) throws Exception;
+
+  Task updateTask(String id, Task updatedTask) throws Exception;
 }

@@ -10,13 +10,15 @@ public interface TaskRepository extends MongoRepository<Task, String> {
 
   List<Task> findTasksByUsername(String username);
 
-  List<Task> findTasksByUsernameAndTitle(String username, String title);
+  Task findTaskByUsernameAndTitle(String username, String title);
 
   Boolean existsByUsernameAndTitle(String username, String title);
 
   void deleteTasksByUsername(String username);
 
   void deleteTasksByTitle(String title);
+
+  void deleteTaskById(String id);
 
   void deleteTasksByUsernameAndTitle(String username, String title);
 

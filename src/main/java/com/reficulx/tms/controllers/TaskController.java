@@ -57,10 +57,8 @@ public class TaskController {
   @PostMapping("/update/id={id}")
   @PreAuthorize("hasRole('USER') and not hasRole('MODERATOR') and not hasRole('ADMIN')")
   public ResponseEntity<Task> updateTask(@PathVariable("id") String id, @RequestBody Task updatedTask) {
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    if (hasUserAccessOnly(authentication) && !authentication.getName().equals(updatedTask.getUsername())) {
-      logger.error("Error: user does not have access to modify other users' tasks!");
-      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+    if (!isOperationAllowed(updatedTask.getUsername())) {
+      return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
     }
     try {
       Task task = taskService.updateTask(id, updatedTask);
@@ -76,31 +74,40 @@ public class TaskController {
     }
   }
 
-  @DeleteMapping("/delete/role=user&username={username}&title={title}")
+  @DeleteMapping("/delete/username={username}&title={title}")
   @PreAuthorize("hasRole('USER') or hasRole('MODERATOR') or hasRole('ADMIN')")
-  public ResponseEntity<String> deleteTasks(@PathVariable("username") String username, @PathVariable("title") String title) {
-    // obtain the user information through the authentication
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    // only admin/moderator could delete others' tasks
-    boolean hasUsername = !Objects.isNull(username) && (username.length() > 0);
-    boolean hasTitle = !Objects.isNull(title) && (title.length() > 0);
+  public ResponseEntity<String> deleteTasksByUsernameAndTitle(@PathVariable("username") String username, @PathVariable("title") String title) {
+
+    boolean hasUsername = isValidStringInput(username);
+    boolean hasTitle = isValidStringInput(title);
     if (!(hasUsername && hasTitle)) {
       String message = "Error: username and title are required to delete a task!";
       logger.error(message);
       return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
     }
-    if (!authentication.getName().equals(username)) {
-      String message = "Error: users could not delete others' tasks or wrong username!";
-      logger.error(message);
-      return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
+
+    if (isOperationAllowed(username)) {
+      return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
     }
     return deleteByUsernameAndTitle(username, title);
   }
 
-  @DeleteMapping("/delete/username={username}&title={title}")
-  @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<String> adminDeleteTasks(@PathVariable("username") String username, @PathVariable("title") String title) {
-    return deleteByUsernameAndTitle(username, title);
+  @DeleteMapping("/delete/id={id}")
+  @PreAuthorize("hasRole('USER') or hasRole('MODERATOR') or hasRole('ADMIN')")
+  public ResponseEntity<Task> deleteTaskById(@PathVariable("id") String id) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    try {
+      Task task = taskService.deleteTask(id, authentication.getName(), hasUserAccessOnly(authentication));
+      if (!Objects.isNull(task)) {
+        return new ResponseEntity<>(task, HttpStatus.OK);
+      } else {
+        logger.error("Error: The task to be updated is not found!");
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+      }
+    } catch (Exception e) {
+      logger.error(e.getMessage());
+      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+    }
   }
 
   private ResponseEntity<String> deleteByUsernameAndTitle(String username, String title) {
@@ -113,8 +120,29 @@ public class TaskController {
     }
   }
 
+  /**
+   * only ADMIN/MODERATOR roles could create/modify/delete other users' tasks
+   *
+   * @param username the owner of the task on which the request is operated
+   * @return whether the user of the request has the access to do the operation
+   */
+  private boolean isOperationAllowed(String username) {
+    // obtain the user information through the authentication context
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (hasUserAccessOnly(authentication) && !Objects.equals(authentication.getName(), username)) {
+      logger.error("Error: user group members do not have access to modify other users' tasks!");
+      return false;
+    }
+    return true;
+  }
+
   private boolean hasUserAccessOnly(Authentication authentication) {
     Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
     return (authorities.contains(new SimpleGrantedAuthority("ROLE_ADMIN")) || authorities.contains(new SimpleGrantedAuthority("ROLE_MODERATOR")));
   }
+
+  private boolean isValidStringInput(String s) {
+    return !Objects.isNull(s) && (s.trim().length() > 0);
+  }
+
 }

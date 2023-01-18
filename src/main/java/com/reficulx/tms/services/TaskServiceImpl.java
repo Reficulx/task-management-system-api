@@ -7,6 +7,7 @@ import com.reficulx.tms.repository.TaskRepository;
 import com.reficulx.tms.utils.Utils;
 import org.springframework.stereotype.Service;
 
+import javax.swing.text.html.Option;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -28,7 +29,7 @@ public class TaskServiceImpl implements TaskService {
       throw new IllegalArgumentException("Error: missing information for username, title, or description!");
     }
     if (taskRepository.existsByUsernameAndTitle(taskRequest.getUsername(), taskRequest.getTitle())) {
-      throw new IllegalArgumentException("Error: Task already exists!");
+      throw new IllegalArgumentException("Error: Task for this username already exists!");
     }
     if (!(Objects.isNull(taskRequest.getStatus()) || taskRequest.getStatus().equals("unpublished"))) {
       throw new IllegalArgumentException("Error: Illegal task status argument from client when creating a task!");
@@ -62,21 +63,17 @@ public class TaskServiceImpl implements TaskService {
   }
 
   @Override
-  public List<Task> getTasks(String username, String title) throws Exception {
-    boolean hasUsername = Utils.isValidString(username);
-    boolean hasTitle = Utils.isValidString(title);
-
-    // TODO: check overdue status for all get task operations
-    if (!(hasUsername || hasTitle)) {
-      return new ArrayList<>(taskRepository.findAll());
+  public Task deleteTask(String id, String username, boolean hasUserAccessOnly) throws Exception {
+    Optional<Task> taskData = taskRepository.findById(id);
+    if (taskData.isPresent()) {
+      Task task = taskData.get();
+      if (hasUserAccessOnly && !Objects.equals(task.getUsername(), username)) {
+        throw new IllegalArgumentException("Error: user group members could not delete others' tasks!");
+      }
+      taskRepository.deleteTaskById(id);
+      return task;
     }
-    if (hasUsername && hasTitle) {
-      return new ArrayList<>(taskRepository.findTasksByUsernameAndTitle(username, title));
-    }
-    if (hasUsername) {
-      return new ArrayList<>(taskRepository.findTasksByUsername(username));
-    }
-    return new ArrayList<>(taskRepository.findTasksByTitleContaining(title));
+    return null;
   }
 
   @Override
@@ -96,20 +93,49 @@ public class TaskServiceImpl implements TaskService {
     return null;
   }
 
+  @Override
+  public Task updateTask(String username, String title, Task updatedTask) {
+    Task task = taskRepository.findTaskByUsernameAndTitle(username, title);
+    if (Objects.isNull(task)) {
+      return task;
+    }
+    return updateTask(task.getId(), updatedTask);
+  }
+
+  @Override
+  public List<Task> getTasks(String username, String title) throws Exception {
+    boolean hasUsername = Utils.isValidString(username);
+    boolean hasTitle = Utils.isValidString(title);
+
+    // TODO: check overdue status for all get task operations
+    if (!(hasUsername || hasTitle)) {
+      return new ArrayList<>(taskRepository.findAll());
+    }
+    if (hasUsername && hasTitle) {
+      List<Task> tasks = new ArrayList<>();
+      tasks.add(taskRepository.findTaskByUsernameAndTitle(username, title));
+      return tasks;
+    }
+    if (hasUsername) {
+      return new ArrayList<>(taskRepository.findTasksByUsername(username));
+    }
+    return new ArrayList<>(taskRepository.findTasksByTitleContaining(title));
+  }
+
   private ETaskStatus getEnumStatus(String status) {
     if (Objects.isNull(status)) {
       return ETaskStatus.UNPUBLISHED;
     }
-    switch (status) {
-      case "unpublished":
+    switch (status.toUpperCase()) {
+      case "UNPUBLISHED":
         return ETaskStatus.UNPUBLISHED;
-      case "inprogress":
+      case "INPROGRESS":
         return ETaskStatus.INPROGRESS;
-      case "overdue":
+      case "OVERDUE":
         return ETaskStatus.OVERDUE;
-      case "completed":
+      case "COMPLETED":
         return ETaskStatus.COMPLETED;
-      case "archived":
+      case "ARCHIVED":
         return ETaskStatus.ARCHIVED;
       default:
         return ETaskStatus.UNPUBLISHED;
