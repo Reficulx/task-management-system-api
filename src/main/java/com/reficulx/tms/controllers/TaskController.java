@@ -79,6 +79,29 @@ public class TaskController {
     }
   }
 
+  @PostMapping("/update/username={username}&title={title}")
+  @PreAuthorize("hasRole('USER') or hasRole('MODERATOR') or hasRole('ADMIN')")
+  public ResponseEntity<Task> updateTaskByUsernameAndTitle(@PathVariable("username") String username, @PathVariable("title") String title, @RequestBody Task updatedTask) {
+    if (!areUsernameAndTitleValid(username, title)) {
+      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+    }
+    if (isOperationAllowed(username)) {
+      return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
+    }
+    try {
+      Task task = taskService.updateTask(username, title, updatedTask);
+      if (!Objects.isNull(task)) {
+        return new ResponseEntity<>(task, HttpStatus.OK);
+      } else {
+        logger.error("Error: task to be updated is not found!");
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+      }
+    } catch (Exception e) {
+      logger.error(e.getMessage());
+      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+    }
+  }
+
   @DeleteMapping("/delete/username={username}&title={title}")
   @PreAuthorize("hasRole('USER') or hasRole('MODERATOR') or hasRole('ADMIN')")
   public ResponseEntity<String> deleteTasksByUsernameAndTitle(@PathVariable("username") String username, @PathVariable("title") String title) {
@@ -100,7 +123,7 @@ public class TaskController {
       if (!Objects.isNull(task)) {
         return new ResponseEntity<>(task, HttpStatus.OK);
       } else {
-        logger.error("Error: The task to be updated is not found!");
+        logger.error("Error: The task to be deleted is not found!");
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
       }
     } catch (Exception e) {
