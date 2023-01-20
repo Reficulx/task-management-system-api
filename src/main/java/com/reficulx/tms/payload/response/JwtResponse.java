@@ -2,7 +2,7 @@ package com.reficulx.tms.payload.response;
 
 import java.util.List;
 
-public class JwtResponse {
+public class JwtResponse implements Response {
   private String accessToken;
   private String tokenType = "Bearer";
   private String id;
@@ -10,12 +10,15 @@ public class JwtResponse {
   private String email;
   private List<String> roles;
 
-  public JwtResponse(String accessToken, String id, String username, String email, List<String> roles) {
+  private String message;
+
+  public JwtResponse(String accessToken, String id, String username, String email, List<String> roles, String message) {
     this.accessToken = accessToken;
     this.id = id;
     this.username = username;
     this.email = email;
     this.roles = roles;
+    this.message = message;
   }
 
   public String getAccessToken() {
@@ -61,4 +64,14 @@ public class JwtResponse {
   public List<String> getRoles() {
     return roles;
   }
+
+  @Override
+  public String getMessage() {
+    return message;
+  }
+
+  public void setMessage(String message) {
+    this.message = message;
+  }
 }
+

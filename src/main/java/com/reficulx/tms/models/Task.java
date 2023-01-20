@@ -11,7 +11,7 @@ public class Task {
   @Id
   private String id;
 
-  private String username;
+  private String username; // TODO: this should be userId
   private String title;
   private String description;
   private Date creationTime;

@@ -1,6 +1,6 @@
 package com.reficulx.tms.payload.response;
 
-public class MessageResponse {
+public class MessageResponse implements Response {
 
   private String message;
 

@@ -2,6 +2,7 @@ package com.reficulx.tms.services;
 
 import com.reficulx.tms.models.ERole;
 import com.reficulx.tms.models.User;
+import com.reficulx.tms.payload.response.UserResponse;
 
 import java.util.List;
 
@@ -10,9 +11,9 @@ public interface UserService {
 
   User getUserByUsername(String username) throws Exception;
 
-  List<User> getUsers() throws Exception;
+  List<UserResponse> getUsers() throws Exception;
 
-  List<User> getUsers(ERole role) throws Exception;
+  List<UserResponse> getUsers(ERole role) throws Exception;
 
   void deleteUser(String id) throws Exception;
 

@@ -3,6 +3,7 @@ package com.reficulx.tms.controllers;
 
 import com.reficulx.tms.models.ERole;
 import com.reficulx.tms.models.User;
+import com.reficulx.tms.payload.response.UserResponse;
 import com.reficulx.tms.services.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,13 +31,13 @@ public class UserController {
   }
 
   /**
-   * for bootstrapping the loggedin status of the user
+   * for bootstrapping the login status of the user
    *
-   * @return
+   * @return UserResponse, partial info of user
    */
   @GetMapping("/me")
   @PreAuthorize(value = "hasRole('USER') or hasRole('MODERATOR') or hasRole('ADMIN')")
-  public ResponseEntity<User> getUser() {
+  public ResponseEntity<UserResponse> getUser() {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     try {
       User user = userService.getUserByUsername(authentication.getName());
@@ -44,7 +45,7 @@ public class UserController {
         logger.error("Error: the username is not found!");
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
       }
-      return new ResponseEntity<>(user, HttpStatus.OK);
+      return new ResponseEntity<>(new UserResponse(user.getId(), user.getUsername(), user.getEmail()), HttpStatus.OK);
     } catch (Exception e) {
       logger.error(e.getMessage());
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -55,7 +56,7 @@ public class UserController {
 
   @GetMapping("/all")
   @PreAuthorize(value = "hasRole('USER') or hasRole('MODERATOR') or hasRole('ADMIN')")
-  public ResponseEntity<List<User>> getUsers() {
+  public ResponseEntity<List<UserResponse>> getUsers() {
     try {
       return new ResponseEntity<>(userService.getUsers(), HttpStatus.OK);
     } catch (Exception e) {
@@ -66,7 +67,7 @@ public class UserController {
 
   @GetMapping("/role={role}")
   @PreAuthorize(value = "hasRole('USER') or hasRole('MODERATOR') or hasRole('ADMIN')")
-  public ResponseEntity<List<User>> getUsers(@PathVariable("role") String role) {
+  public ResponseEntity<List<UserResponse>> getUsers(@PathVariable("role") String role) {
     ERole eRole;
     switch (role.toUpperCase()) {
       case "ADMIN":

@@ -7,10 +7,12 @@ import com.reficulx.tms.payload.request.LoginRequest;
 import com.reficulx.tms.payload.request.SignupRequest;
 import com.reficulx.tms.payload.response.JwtResponse;
 import com.reficulx.tms.payload.response.MessageResponse;
+import com.reficulx.tms.payload.response.Response;
 import com.reficulx.tms.repository.RoleRepository;
 import com.reficulx.tms.repository.UserRepository;
 import com.reficulx.tms.security.jwt.JwtUtils;
 import com.reficulx.tms.services.UserDetailsImpl;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -47,21 +49,26 @@ public class AuthController {
 
 
   @PostMapping("/signin")
-  public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
-    Authentication authentication = authenticationManager.authenticate(
-            new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
-    SecurityContextHolder.getContext().setAuthentication(authentication);
-    String jwt = jwtUtils.generateJwtToken(authentication);
+  public ResponseEntity<Response> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
+    try {
+      Authentication authentication = authenticationManager.authenticate(
+              new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+      SecurityContextHolder.getContext().setAuthentication(authentication);
+      String jwt = jwtUtils.generateJwtToken(authentication);
 
-    UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-    List<String> roles = userDetails.getAuthorities().stream()
-            .map(item -> item.getAuthority())
-            .collect(Collectors.toList());
-    return ResponseEntity.ok(new JwtResponse(jwt,
-            userDetails.getId(),
-            userDetails.getUsername(),
-            userDetails.getEmail(),
-            roles));
+      UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+      List<String> roles = userDetails.getAuthorities().stream()
+              .map(item -> item.getAuthority())
+              .collect(Collectors.toList());
+      return ResponseEntity.ok(new JwtResponse(jwt,
+              userDetails.getId(),
+              userDetails.getUsername(),
+              userDetails.getEmail(),
+              roles,
+              "Login Successfully!"));
+    } catch (Exception e) {
+      return new ResponseEntity(new MessageResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
+    }
   }
 
   @PostMapping("/signup")
